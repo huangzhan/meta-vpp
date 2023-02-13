@@ -24,6 +24,7 @@ RDEPENDS_${PN} = " \
 		tunctl \
 		ethtool \
 		pciutils \
-		vpp-core-plugin-acl \
-		vpp-core \
+		vpp-plugin-dpdk \
+		vpp-plugin-core \
+		vpp \
 		"

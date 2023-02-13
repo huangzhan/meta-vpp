@@ -1,10 +1,11 @@
 DESCRIPTION = "Vector Packet Processing"
 
-STABLE = "stable/1807"
+STABLE = "stable/2210"
 BRANCH = "master"
-SRCREV = "9f624cacf379c5349e66c12b91f0b4765f7ec22c"
+SRCREV = "b807f08d87c1186027bb1266dbd41857d9fcb91a"
+SRC_URI[sha256sum] = "7281b2eb1c4ae0d55b4f740f1d3475bd709d7f0d307235d344c7975a8353e648"
 S = "${WORKDIR}/git"
-PV = "18.07"
+PV = "22.10"
 
 LICENSE = "Apache-2.0"
 
@@ -13,17 +14,15 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=175792518e4ac015ab6696d16c4f607e"
 AUTOTOOLS_SCRIPT_PATH = "${S}/src"
 
 
-SRC_URI = "git://github.com/FDio/vpp;branch=${STABLE} \
-	file://0001-Link-vpp-api-with-shared-libs-if-static-is-disabled.patch \
-	file://0001-GCC-above-5.4-fails-when-we-specify-arch-funattribut.patch \
+SRC_URI = "git://github.com/FDio/vpp.git;protocol=https;branch=${STABLE} \
 	"
-DEPENDS = "dpdk openssl numactl"
+DEPENDS = "dpdk openssl numactl ${PYTHON_PN}-ply-native"
 
-inherit autotools
+inherit cmake systemd
 inherit pkgconfig
-inherit python-dir
+inherit python3targetconfig python3-dir
 
-
+OECMAKE_SOURCEPATH = "${S}/src"
 EXTRA_OECONF = " \
 	--disable-dependency-tracking \
 	--with-log2-cache-line-bytes=6  \
@@ -33,20 +32,24 @@ EXTRA_OECONF = " \
 	--disable-japi \
 	--disable-static \
 	"
+EXTRA_OECMAKE = " \
+	-DVPP_SET_RPATH=OFF \
+	-DVPP_USE_SYSTEM_DPDK=ON \
+	"
 
 include vpp-pkgs.inc
 
 
-do_configure_append () {
+do_configure:append () {
 	( cd ${B} &&  mkdir -p vppinfra vpp/app )
 }
 
-do_install_append() {
+do_install:append () {
 	mkdir -p ${D}/etc/vpp
 	cp ${S}/src/vpp/conf/startup.conf ${D}/etc/vpp/startup.conf
 }
 
-pkg_postinst_ontarget_${PN} () {
+pkg_postinst_ontarget:${PN} () {
 echo vm.nr_hugepages=1024 >> /etc/sysctl.conf
 
 # Must be greater than or equal to (2 * vm.nr_hugepages).
